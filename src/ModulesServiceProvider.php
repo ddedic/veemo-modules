@@ -21,7 +21,7 @@ class ModulesServiceProvider extends ServiceProvider
 	public function boot()
 	{
 		$this->publishes([
-			__DIR__.'/../Publish/Config/modules.php' => config_path('veemo/modules.php'),
+			__DIR__.'/Config/modules.php' => config_path('veemo/modules.php'),
 		]);
 
 
@@ -36,7 +36,7 @@ class ModulesServiceProvider extends ServiceProvider
 	public function register()
 	{
 		$this->mergeConfigFrom(
-			__DIR__.'/../Publish/Config/modules.php', 'veemo.modules'
+			__DIR__.'/Config/modules.php', 'veemo.modules'
 		);
 
 		$this->registerServices();
