@@ -1,11 +1,11 @@
 {
-    "name": "ddedic/:package_name",
-    "description": ":package_description",
+    "name": "ddedic/veemo-modules",
+    "description": "Veemo Modules - core package. Module separation.",
     "keywords": [
         "veemo",
-        ":package_name"
+        "veemo-modules"
     ],
-    "homepage": "https://github.com/ddedic/:package_name",
+    "homepage": "https://github.com/ddedic/veemo-modules",
     "license": "MIT",
     "authors": [
         {
@@ -24,12 +24,12 @@
     },
     "autoload": {
         "psr-4": {
-            "Veemo\\XXXX\\": "src"
+            "Veemo\\Modules\\": "src"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Veemo\\XXXX\\Test\\": "tests"
+            "Veemo\\Modules\\Test\\": "tests"
         }
     },
     "extra": {

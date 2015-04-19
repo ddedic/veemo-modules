@@ -1,21 +1,21 @@
-# :package_name
+# veemo-modules
 
-[![Latest Version](https://img.shields.io/github/release/ddedic/:package_name.svg?style=flat-square)](https://github.com/ddedic/:package_name/releases)
+[![Latest Version](https://img.shields.io/github/release/ddedic/veemo-modules.svg?style=flat-square)](https://github.com/ddedic/veemo-modules/releases)
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE.md)
-[![Build Status](https://img.shields.io/travis/ddedic/:package_name/master.svg?style=flat-square)](https://travis-ci.org/ddedic/:package_name)
-[![Coverage Status](https://img.shields.io/scrutinizer/coverage/g/ddedic/:package_name.svg?style=flat-square)](https://scrutinizer-ci.com/g/ddedic/:package_name/code-structure)
-[![Quality Score](https://img.shields.io/scrutinizer/g/ddedic/:package_name.svg?style=flat-square)](https://scrutinizer-ci.com/g/ddedic/:package_name)
-[![Total Downloads](https://img.shields.io/packagist/dt/league/:package_name.svg?style=flat-square)](https://packagist.org/packages/:package_name)
+[![Build Status](https://img.shields.io/travis/ddedic/veemo-modules/master.svg?style=flat-square)](https://travis-ci.org/ddedic/veemo-modules)
+[![Coverage Status](https://img.shields.io/scrutinizer/coverage/g/ddedic/veemo-modules.svg?style=flat-square)](https://scrutinizer-ci.com/g/ddedic/veemo-modules/code-structure)
+[![Quality Score](https://img.shields.io/scrutinizer/g/ddedic/veemo-modules.svg?style=flat-square)](https://scrutinizer-ci.com/g/ddedic/veemo-modules)
+[![Total Downloads](https://img.shields.io/packagist/dt/league/veemo-modules.svg?style=flat-square)](https://packagist.org/packages/veemo-modules)
 
 
-Veemo Auth - core package. Login, registration, password resets, user activation, active, inactive, banned, throttling.
+Veemo Modules - core package. Module separation.
 
 ## Install
 
 Via Composer
 
 ``` bash
-$ composer require ddedic/:package_name
+$ composer require ddedic/veemo-modules
 ```
 
 ## Usage
