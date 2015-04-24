@@ -55,7 +55,8 @@ class ModuleMigrateRollbackCommand extends Command
 			return $this->rollback($module);
 		} else {
 			foreach ($this->module->all() as $module) {
-				$this->rollback($module['slug']);
+                $this->info('Rolling back module: '. $module['slug']);
+                $this->rollback($module['slug']);
 			}
 		}
 	}
