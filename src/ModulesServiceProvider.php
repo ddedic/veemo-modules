@@ -5,6 +5,7 @@ use Veemo\Modules\Handlers\ModulesHandler;
 use Illuminate\Database\Migrations\Migrator;
 use Illuminate\Database\Migrations\DatabaseMigrationRepository;
 use Illuminate\Support\ServiceProvider;
+use Veemo\Modules\Repositories\ModuleRepositoryInterface;
 
 class ModulesServiceProvider extends ServiceProvider
 {
@@ -39,6 +40,7 @@ class ModulesServiceProvider extends ServiceProvider
 			__DIR__.'/Config/modules.php', 'veemo.modules'
 		);
 
+
 		$this->registerServices();
 
 		$this->registerRepository();
@@ -61,19 +63,35 @@ class ModulesServiceProvider extends ServiceProvider
 		return ['modules'];
 	}
 
-	/**
-	 * Register the package services.
-	 *
-	 * @return void
-	 */
+
 	protected function registerServices()
 	{
-		$this->app->bindShared('modules', function ($app) {
-			return new Modules($app['config'],	$app['files']);
+        // Bind ModuleRepository
+        $this->app->bind('Veemo\Modules\Repositories\ModuleRepositoryInterface', function()
+        {
+            return $this->app['veemo.modules.moduleRepository'] = new Repositories\ModuleEloquentRepository(
+                new Models\Module()
+            );
+        });
+
+
+        //Setup ModuleManager
+        $this->app['veemo.modules.manager'] = $this->app->share(function ($app) {
+            return new ModuleManager($app['veemo.modules.moduleRepository'], $app['files'], $app['config']);
+        });
+
+
+        // Setup Modules
+		$this->app->bindShared('veemo.modules', function ($app) {
+			return new Modules($app['veemo.modules.manager'], $app['config'],	$app['files']);
 		});
 
+
+
+
+        // Register Modules
 		$this->app->booting(function ($app) {
-			$app['modules']->register();
+			//$app['modules']->register();
 		});
 	}
 

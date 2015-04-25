@@ -13,7 +13,10 @@ return [
 	|
 	*/
 
-	'path' => app_path('Modules'),
+	'path' => [
+        'core'      =>  app_path('Modules/Core'),
+        'addons'    =>  app_path('Modules/Addons'),
+    ],
 
 	/*
 	|--------------------------------------------------------------------------
@@ -26,6 +29,20 @@ return [
 	|
 	*/	
 
-	'namespace' => 'App\Modules\\'
+	'namespace' => [
+        'core'      => 'App\Modules\Core\\',
+        'addons'    =>  'App\Modules\Addons\\'
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Modules Config Filename
+    |--------------------------------------------------------------------------
+    |
+    | Filename of the module configuration
+    |
+    */
+
+    'moduleConfigFilename' => 'config.php'
 	
 ];
