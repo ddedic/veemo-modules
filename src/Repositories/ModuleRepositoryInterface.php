@@ -12,6 +12,5 @@ namespace Veemo\Modules\Repositories;
 
 interface ModuleRepositoryInterface {
 
-    public function dummy();
 
 } 

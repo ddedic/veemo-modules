@@ -19,11 +19,11 @@ interface ModuleManagerInterface
 
     public function all();
 
-    public function coreModules();
-
-    public function addonModules();
+    public function getModules();
 
     public function exist($slug);
+
+    public function info($slug);
 
     public function enabled();
 
@@ -43,5 +43,8 @@ interface ModuleManagerInterface
 
     public function disable($slug);
 
+    public function install($slug);
+
+    public function uninstall($slug);
 
 } 

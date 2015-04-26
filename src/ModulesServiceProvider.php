@@ -5,7 +5,6 @@ use Veemo\Modules\Handlers\ModulesHandler;
 use Illuminate\Database\Migrations\Migrator;
 use Illuminate\Database\Migrations\DatabaseMigrationRepository;
 use Illuminate\Support\ServiceProvider;
-use Veemo\Modules\Repositories\ModuleRepositoryInterface;
 
 class ModulesServiceProvider extends ServiceProvider
 {
@@ -76,7 +75,7 @@ class ModulesServiceProvider extends ServiceProvider
 
 
         //Setup ModuleManager
-        $this->app['veemo.modules.manager'] = $this->app->share(function ($app) {
+       $this->app->bindShared('veemo.modules.manager', function ($app) {
             return new ModuleManager($app['veemo.modules.moduleRepository'], $app['files'], $app['config']);
         });
 

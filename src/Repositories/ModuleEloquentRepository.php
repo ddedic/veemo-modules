@@ -18,8 +18,4 @@ class ModuleEloquentRepository extends BaseRepository implements ModuleRepositor
     }
 
 
-    public function dummy()
-    {
-        // TODO: Implement dummy() method.
-    }
 }

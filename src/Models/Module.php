@@ -19,7 +19,7 @@ class Module extends BaseEloquentModel implements ModuleInterface
      *
      * @var array
      */
-    protected $visible = [];
+    protected $visible = ['slug', 'installed', 'enabled'];
 
     /**
      * The database table used by the model.
@@ -27,6 +27,17 @@ class Module extends BaseEloquentModel implements ModuleInterface
      * @var string
      */
     protected $table = 'modules';
+
+
+    /**
+     * The attributes that should be casted to native types.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'enabled' => 'boolean',
+        'installed' => 'boolean'
+    ];
 
 
 }
