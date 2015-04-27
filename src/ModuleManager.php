@@ -4,6 +4,7 @@
 namespace Veemo\Modules;
 
 use Countable;
+use Illuminate\Support\Str;
 use Illuminate\Config\Repository;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -12,28 +13,50 @@ use Illuminate\Support\Collection;
 use Veemo\Modules\Repositories\ModuleRepositoryInterface;
 
 
-
 class ModuleManager implements Countable, ModuleManagerInterface
 {
 
+    /**
+     * @var ModuleRepositoryInterface
+     */
     protected $modules;
 
 
+    /**
+     * @var Filesystem
+     */
     protected $files;
 
 
+    /**
+     * @var Repository
+     */
     protected $config;
 
 
+    /**
+     * @var array
+     */
     protected $path = [];
 
 
+    /**
+     * @var
+     */
     protected $collection;
 
 
+    /**
+     * @var array
+     */
     protected $conditions = [];
 
 
+    /**
+     * @param ModuleRepositoryInterface $modules
+     * @param Filesystem $files
+     * @param Repository $config
+     */
     public function __construct(ModuleRepositoryInterface $modules, Filesystem $files, Repository $config)
     {
         $this->modules = $modules;
@@ -42,31 +65,25 @@ class ModuleManager implements Countable, ModuleManagerInterface
 
     }
 
-
-    public function isEnabled($slug)
-    {
-        $module = $this->modules->where('slug', $slug)->first();
-
-        if($module)
-        {
-            return ($module->enabled === true) ?  true :  false;
-        }
-
-        return false;
-    }
-
+    /**
+     * @param $slug
+     * @return bool
+     */
     public function isDisabled($slug)
     {
         $module = $this->modules->where('slug', $slug)->first();
 
-        if($module)
-        {
-            return ($module->enabled === false) ?  true :  false;
+        if ($module) {
+            return ($module->enabled === false) ? true : false;
         }
 
         return true;
     }
 
+    /**
+     * @param $slug
+     * @return bool
+     */
     public function isCore($slug)
     {
 
@@ -86,6 +103,10 @@ class ModuleManager implements Countable, ModuleManagerInterface
         return false;
     }
 
+    /**
+     * @param $slug
+     * @return bool
+     */
     public function exist($slug)
     {
         $modules = $this->all();
@@ -93,6 +114,9 @@ class ModuleManager implements Countable, ModuleManagerInterface
         return $modules->contains('slug', $slug);
     }
 
+    /**
+     * @return static
+     */
     public function all()
     {
         $core = $this->core_modules();
@@ -101,51 +125,9 @@ class ModuleManager implements Countable, ModuleManagerInterface
         return $core->merge($addons);
     }
 
-    public function getModules()
-    {
-        $modules = $this->all();
-
-        if (is_array($this->conditions))
-        {
-            foreach($this->conditions as $condition => $value)
-            {
-                $result = $modules->filter(function ($module) use ($condition, $value) {
-                    if ($module[$condition] == $value) {
-                        return true;
-                    }
-                });
-
-                $modules = $result;
-            }
-        }
-
-
-        return $modules;
-    }
-
-
-    public function enabled()
-    {
-        $this->conditions['enabled'] = true;
-
-        return $this;
-    }
-
-    public function disabled()
-    {
-        $this->conditions['enabled'] = false;
-
-        return $this;
-    }
-
-    public function installed()
-    {
-        $this->conditions['installed'] = true;
-
-        return $this;
-    }
-
-
+    /**
+     * @return Collection
+     */
     protected function core_modules()
     {
         $modules = $this->scanModulesFolder('core');
@@ -154,14 +136,10 @@ class ModuleManager implements Countable, ModuleManagerInterface
         return $modules;
     }
 
-    protected function addon_modules()
-    {
-        $modules = $this->scanModulesFolder('addons');
-        $modules->sortBy('order');
-
-        return $modules;
-    }
-
+    /**
+     * @param null $which
+     * @return Collection
+     */
     protected function scanModulesFolder($which = null)
     {
         $modules = [];
@@ -181,6 +159,8 @@ class ModuleManager implements Countable, ModuleManagerInterface
                 if ($this->evaluateModuleConfig($moduleConfigFile)) {
                     $current_module = $this->getModuleInfoFromConfigFile($moduleConfigFile);
                     $current_module['path'] = $module;
+                    $current_module['namespace'] = $this->config->get('veemo.modules.namespace.' . $which) . Str::studly($current_module['slug']);
+
                     $current_module['installed'] = $this->isInstalled($current_module['slug']);
                     $current_module['enabled'] = $this->isEnabled($current_module['slug']);
 
@@ -217,10 +197,14 @@ class ModuleManager implements Countable, ModuleManagerInterface
         return $this;
     }
 
+    /**
+     * @param $configFile
+     * @return bool
+     */
     protected function evaluateModuleConfig($configFile)
     {
 
-        $required = ['slug', 'order', 'version', 'name', 'description', 'author', 'frontend', 'backend', 'settings'];
+        $required = ['slug', 'order', 'version', 'name', 'description', 'author', 'frontend', 'backend', 'permissions', 'settings'];
         $config = $this->files->getRequire($configFile);
 
         if (is_array($config)) {
@@ -236,6 +220,10 @@ class ModuleManager implements Countable, ModuleManagerInterface
         return false;
     }
 
+    /**
+     * @param $configFile
+     * @return array
+     */
     protected function getModuleInfoFromConfigFile($configFile)
     {
         $config = $this->files->getRequire($configFile);
@@ -255,6 +243,7 @@ class ModuleManager implements Countable, ModuleManagerInterface
 
                 'frontend' => $config['frontend'],
                 'backend' => $config['backend'],
+                'permissions' => $config['permissions'],
                 'settings' => $config['settings']
 
             ]
@@ -264,37 +253,128 @@ class ModuleManager implements Countable, ModuleManagerInterface
         return $module;
     }
 
+    /**
+     * @param $slug
+     * @return bool
+     */
     public function isInstalled($slug)
     {
         $module = $this->modules->where('slug', $slug)->first();
 
-        if($module)
-        {
-            return ($module->installed === true) ?  true :  false;
+        if ($module) {
+            return ($module->installed === true) ? true : false;
         }
 
         return false;
     }
 
-
-
-    public function enable($slug)
+    /**
+     * @param $slug
+     * @return bool
+     */
+    public function isEnabled($slug)
     {
         $module = $this->modules->where('slug', $slug)->first();
 
-        if($module) {
-            return $this->modules->updateById($module->id, ['enabled' => 1]);
+        if ($module) {
+            return ($module->enabled === true) ? true : false;
+        }
 
-        } else {
+        return false;
+    }
 
-            if ($module = $this->info($slug)) {
+    /**
+     * @return Collection
+     */
+    protected function addon_modules()
+    {
+        $modules = $this->scanModulesFolder('addons');
+        $modules->sortBy('order');
+
+        return $modules;
+    }
+
+    /**
+     * @return ModuleManager
+     */
+    public function getModules()
+    {
+        $modules = $this->all();
+
+        if (is_array($this->conditions)) {
+            foreach ($this->conditions as $condition => $value) {
+                $result = $modules->filter(function ($module) use ($condition, $value) {
+                    if ($module[$condition] == $value) {
+                        return true;
+                    }
+                });
+
+                $modules = $result;
+            }
+        }
+
+
+        return $modules;
+    }
+
+    /**
+     * @return $this
+     */
+    public function enabled()
+    {
+        $this->conditions['enabled'] = true;
+
+        return $this;
+    }
+
+    /**
+     * @return $this
+     */
+    public function disabled()
+    {
+        $this->conditions['enabled'] = false;
+
+        return $this;
+    }
+
+    /**
+     * @return $this
+     */
+    public function installed()
+    {
+        $this->conditions['installed'] = true;
+
+        return $this;
+    }
+
+    /**
+     * @param $slug
+     * @return null
+     */
+    public function enable($slug)
+    {
+        if ($module = $this->info($slug)) {
+
+
+            $result = $this->modules->where('slug', $slug)->first();
+
+            if ($result) {
+                return $this->modules->updateById($result->id, ['enabled' => 1]);
+
+            } else {
+
                 return $this->modules->create(['slug' => $module['slug'], 'enabled' => 1]);
             }
+
         }
 
         return null;
     }
 
+    /**
+     * @param $slug
+     * @return null
+     */
     public function info($slug)
     {
         if ($this->exist($slug)) {
@@ -306,54 +386,76 @@ class ModuleManager implements Countable, ModuleManagerInterface
         return null;
     }
 
+    /**
+     * @param $slug
+     * @return null
+     */
     public function disable($slug)
     {
-        $module = $this->modules->where('slug', $slug)->first();
+        if ($check = $this->info($slug)) {
+            if (!$check['is_core']) {
 
-        if($module) {
-            return $this->modules->updateById($module->id, ['enabled' => 0]);
+                $module = $this->modules->where('slug', $slug)->first();
 
-        } else {
+                if ($module) {
+                    return $this->modules->updateById($module->id, ['enabled' => 0]);
 
-            if ($module = $this->info($slug)) {
-                return $this->modules->create(['slug' => $module['slug'], 'enabled' => 0]);
+                } else {
+
+                    return $this->modules->create(['slug' => $check['slug'], 'enabled' => 0]);
+                }
             }
         }
+
 
         return null;
     }
 
+    /**
+     * @param $slug
+     * @return null
+     */
     public function install($slug)
     {
-        $module = $this->modules->where('slug', $slug)->first();
+        if ($module = $this->info($slug)) {
 
-        if($module) {
-            return $this->modules->updateById($module->id, ['installed' => 1]);
+            $result = $this->modules->where('slug', $slug)->first();
 
-        } else {
+            if ($result) {
+                return $this->modules->updateById($result->id, ['installed' => 1]);
 
-            if ($module = $this->info($slug)) {
+            } else {
+
                 return $this->modules->create(['slug' => $module['slug'], 'installed' => 1]);
             }
+
         }
 
         return null;
     }
 
 
+    /**
+     * @param $slug
+     * @return null
+     */
     public function uninstall($slug)
     {
-        $module = $this->modules->where('slug', $slug)->first();
+        if ($check = $this->info($slug)) {
+            if (!$check['is_core']) {
 
-        if($module) {
-            return $this->modules->updateById($module->id, ['installed' => 0]);
+                $module = $this->modules->where('slug', $slug)->first();
 
-        } else {
+                if ($module) {
+                    return $this->modules->updateById($module->id, ['installed' => 0]);
 
-            if ($module = $this->info($slug)) {
-                return $this->modules->create(['slug' => $module['slug'], 'installed' => 0]);
+                } else {
+
+                    return $this->modules->create(['slug' => $check['slug'], 'installed' => 0]);
+                }
             }
         }
+
 
         return null;
     }

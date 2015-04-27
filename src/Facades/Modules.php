@@ -3,7 +3,7 @@ namespace Veemo\Modules\Facades;
 
 use Illuminate\Support\Facades\Facade;
 
-class Module extends Facade
+class Modules extends Facade
 {
 	/**
 	 * Get the registered name of the component.
@@ -12,6 +12,6 @@ class Module extends Facade
 	 */
 	protected static function getFacadeAccessor()
 	{
-		return 'modules';
+		return 'veemo.modules';
 	}
 }

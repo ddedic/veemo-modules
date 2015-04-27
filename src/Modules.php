@@ -3,6 +3,7 @@ namespace Veemo\Modules;
 
 use App;
 use Countable;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Veemo\Core\Contracts\Modules\ModulesInterface;
 use Veemo\Modules\Exceptions\FileMissingException;
 use Illuminate\Config\Repository;
@@ -33,9 +34,13 @@ class Modules implements ModulesInterface
      */
     protected $manager;
 
+
+
+
 	/**
 	 * Constructor method.
 	 *
+     * @param \Veemo\Modules\ModuleManagerInterface        $manager
 	 * @param \Illuminate\Config\Repository                $config
 	 * @param \Illuminate\Filesystem\Filesystem            $files
 	 */
@@ -47,24 +52,151 @@ class Modules implements ModulesInterface
 	}
 
 
-    public function install($slug)
+    public function install($slug, $enable = false)
     {
-        // TODO: Implement install() method.
+        if ($module = $this->manager->info($slug)) {
+
+            if (!$module['installed']) {
+
+                $permissions = $this->installPermissions($module);
+                $settings = $this->installSettings($module);
+                $installed = false;
+
+                if ($permissions && $settings)
+                {
+                    if ($this->manager->install($slug))
+                    {
+                        if ($enable) {
+                            $this->manager->enable($slug);
+                        }
+
+                        // Migrate and Seed module
+
+                        $installed = true;
+                    }
+                }
+
+                return ($installed == true) ? 'Module ' . $module['name'] .' installed succesfully.' : 'Module installation failed.';
+
+
+            } else {
+                return 'Module is already installed.';
+            }
+
+        } else {
+            return 'Module you are trying to install doesnt exist';
+        }
+
     }
+
+    protected function installPermissions($module)
+    {
+        $permissions = app('App\Modules\Core\Users\Repositories\PermissionRepositoryInterface');
+
+        if (is_array($module['config']['permissions']) && (count($module['config']['permissions']) > 0))
+        {
+            foreach($module['config']['permissions'] as $type => $value)
+            {
+                if (is_array($value))
+                {
+
+                    try {
+
+                        foreach ($value as $permission)
+                        {
+                            $permissions->create([
+                                'slug'          => $type . '.' . $permission['slug'],
+                                'name'          => $permission['name'],
+                                'description'   => $permission['description'],
+
+                                'module'        => $module['slug'],
+                                'type'          => $type
+                            ]);
+                        }
+
+                    } catch (ModelNotFoundException $e) {
+                        // skip faulty permissions
+                    }
+
+                }
+            }
+
+        }
+
+        return true;
+    }
+
+    protected function installSettings($module)
+    {
+        return true;
+    }
+
 
     public function uninstall($slug)
     {
         // TODO: Implement uninstall() method.
     }
 
+    protected function uninstallPermissions($module)
+    {
+        $permissions = app('App\Modules\Core\Users\Repositories\PermissionRepositoryInterface');
+
+        $permissions->where('module', $module['slug'])->delete();
+
+        return true;
+    }
+
+    protected function uninstallSettings($module)
+    {
+        return true;
+    }
+
     public function enable($slug)
     {
-        // TODO: Implement enable() method.
+        if ($module = $this->manager->info($slug)) {
+
+            if (!$module['enabled'])
+            {
+                $enabled = false;
+
+                if ($this->manager->enable($slug))
+                {
+                    $enabled = true;
+                }
+
+                return ($enabled == true) ? 'Module ' . $module['name'] .' succesfully enabled.' : 'Failed to enable module.';
+
+            } else {
+                return 'Module is already enabled.';
+            }
+
+        } else {
+            return 'Module you are trying to enable doesnt exist';
+        }
     }
 
     public function disable($slug)
     {
-        // TODO: Implement disable() method.
+        if ($module = $this->manager->info($slug)) {
+
+            if ($module['enabled'])
+            {
+                $enabled = true;
+
+                if ($this->manager->disable($slug))
+                {
+                    $enabled = false;
+                }
+
+                return ($enabled == false) ? 'Module ' . $module['name'] .' succesfully disabled.' : 'Failed to disable module. Maybe it is core module?';
+
+            } else {
+                return 'Module is already disabled.';
+            }
+
+        } else {
+            return 'Module you are trying to disable doesnt exist';
+        }
     }
 
     public function register($slug)
@@ -72,18 +204,19 @@ class Modules implements ModulesInterface
         // TODO: Implement register() method.
     }
 
-    public function registerCoreModules()
-    {
-        // TODO: Implement registerCoreModules() method.
-    }
-
-    public function registerAddonModules()
-    {
-        // TODO: Implement registerAddonModules() method.
-    }
 
     public function registerModules()
     {
-        // TODO: Implement registerModules() method.
+        $modules = $this->manager->installed()->enabled()->getModules();
+
+        return $modules;
     }
+
+    public function getManager()
+    {
+        return $this->manager;
+    }
+
+
+
 }
