@@ -6,30 +6,57 @@ trait MigrationTrait
 	/**
 	 * Require (once) all migration files for the supplied module.
 	 *
-	 * @param  string $module
+	 * @param  string $slug
 	 * @return void
 	 */
-	protected function requireMigrations($module)
+	protected function requireMigrations($slug)
 	{
-		$path = $this->getMigrationPath($module);
+		$path = $this->getMigrationPath($slug);
 
 		$migrations = $this->laravel['files']->glob($path.'*_*.php');
+
 
 		foreach ($migrations as $migration) {
 			$this->laravel['files']->requireOnce($migration);
 		}
 	}
 
+    /**
+     * Require (once) all migration files for the ALL modules.
+     *
+     * @return void
+     */
+    protected function requireAllMigrations()
+    {
+        $installed_modules = $this->laravel['veemo.modules']->getManager()->installed()->getModules();
+
+        foreach($installed_modules as $module)
+        {
+            $current_module = $this->laravel['veemo.modules']->getManager()->info($module['slug']);
+            $path = $current_module['path'] . '/Database/Migrations/';
+
+            $migrations = $this->laravel['files']->glob($path.'*_*.php');
+
+
+            foreach ($migrations as $migration) {
+                $this->laravel['files']->requireOnce($migration);
+            }
+
+        }
+
+    }
+
 	/**
 	 * Get migration directory path.
 	 *
-	 * @param  string $module
+	 * @param  string $slug
 	 * @return string
 	 */
-	protected function getMigrationPath($module)
+	protected function getMigrationPath($slug)
 	{
-		$path = $this->laravel['modules']->getModulePath($module);
+        $module = $this->laravel['veemo.modules']->getManager()->info($slug);
+		$path = $module['path'];
 
-		return $path.'Database/Migrations/';
+		return $path.'/Database/Migrations/';
 	}
 }

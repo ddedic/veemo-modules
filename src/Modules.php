@@ -4,12 +4,14 @@ namespace Veemo\Modules;
 use App;
 use Countable;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Database\QueryException;
 use Veemo\Core\Contracts\Modules\ModulesInterface;
 use Veemo\Modules\Exceptions\FileMissingException;
 use Illuminate\Config\Repository;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Str;
+
 
 class Modules implements ModulesInterface
 {
@@ -52,6 +54,12 @@ class Modules implements ModulesInterface
 	}
 
 
+    public function getManager()
+    {
+        return $this->manager;
+    }
+
+
     public function install($slug, $enable = false)
     {
         if ($module = $this->manager->info($slug)) {
@@ -92,6 +100,7 @@ class Modules implements ModulesInterface
     protected function installPermissions($module)
     {
         $permissions = app('App\Modules\Core\Users\Repositories\PermissionRepositoryInterface');
+        $roles = app('App\Modules\Core\Users\Repositories\RoleRepositoryInterface');
 
         if (is_array($module['config']['permissions']) && (count($module['config']['permissions']) > 0))
         {
@@ -104,7 +113,7 @@ class Modules implements ModulesInterface
 
                         foreach ($value as $permission)
                         {
-                            $permissions->create([
+                            $new_permission = $permissions->create([
                                 'slug'          => $type . '.' . $permission['slug'],
                                 'name'          => $permission['name'],
                                 'description'   => $permission['description'],
@@ -112,10 +121,23 @@ class Modules implements ModulesInterface
                                 'module'        => $module['slug'],
                                 'type'          => $type
                             ]);
+
+                            // Assign created permission to default admin user
+                            if ($new_permission)
+                            {
+                                $defaultAdminUser = $this->config->get('veemo.auth.users_default_admin_role');
+                                $adminRole = $roles->where('slug', $defaultAdminUser)->first();
+
+                                $adminRole->assignPermission($new_permission->id);
+                            }
+
+
                         }
 
                     } catch (ModelNotFoundException $e) {
-                        // skip faulty permissions
+                        // skip
+                    } catch (QueryException $e) {
+                        // skip is exist
                     }
 
                 }
@@ -199,7 +221,7 @@ class Modules implements ModulesInterface
         }
     }
 
-    public function register($slug)
+    public function register($module)
     {
         // TODO: Implement register() method.
     }
@@ -209,13 +231,36 @@ class Modules implements ModulesInterface
     {
         $modules = $this->manager->installed()->enabled()->getModules();
 
-        return $modules;
+        foreach ($modules as $module)
+        {
+            // Register Module Service Provider
+            $this->registerServiceProvider($module);
+
+            // Build Backend Menu
+            //
+
+            // Build Frontend Menu
+            //
+        }
+
     }
 
-    public function getManager()
+
+    protected function registerServiceProvider($module)
     {
-        return $this->manager;
+        $module_name    = studly_case($module['slug']);
+        $file           = $module['path'] . "/Providers/{$module_name}ServiceProvider.php";
+        $namespace      = $module['namespace'] ."\\Providers\\{$module_name}ServiceProvider";
+        if (! $this->files->exists($file)) {
+            $message = "Module [{$module_name}] must have a \"{$module_name}/Providers/{$module_name}ServiceProvider.php\" file for bootstrapping purposes.";
+            throw new FileMissingException($message);
+        }
+
+        App::register($namespace);
     }
+
+
+
 
 
 

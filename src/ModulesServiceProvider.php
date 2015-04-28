@@ -135,11 +135,86 @@ class ModulesServiceProvider extends ServiceProvider
 	 */
 	protected function registerConsoleCommands()
 	{
+        $this->registerModuleMigrateCommand();
+        $this->registerModuleMigrateRollbackCommand();
+        $this->registerModuleMigrateRefreshCommand();
+        $this->registerModuleMigrateResetCommand();
+        $this->registerModuleSeedCommand();
 
+
+        $this->commands([
+            'veemo.module.migrate',
+            'veemo.module.migrate.rollback',
+            'veemo.module.migrate.refresh',
+            'veemo.module.migrate.reset',
+            'veemo.module.seed'
+        ]);
 	}
 
 
+    /**
+     * Register the "veemo:module:migrate" console command.
+     *
+     * @return Console\ModuleMigrateCommand
+     */
+    protected function registerModuleMigrateCommand()
+    {
+        $this->app->bindShared('veemo.module.migrate', function($app) {
+            return new Console\ModuleMigrateCommand($app['migrator'], $app['veemo.modules']);
+        });
+    }
 
+
+    /**
+     * Register the "veemo:module:seed" console command.
+     *
+     * @return Console\ModuleSeedCommand
+     */
+    protected function registerModuleSeedCommand()
+    {
+        $this->app->bindShared('veemo.module.seed', function($app) {
+            return new Console\ModuleSeedCommand($app['veemo.modules'], $app['files'], $app['migrator']);
+        });
+    }
+
+
+    /**
+     * Register the "veemo:module:migrate:rollback" console command.
+     *
+     * @return Console\ModuleMigrateRollbackCommand
+     */
+    protected function registerModuleMigrateRollbackCommand()
+    {
+        $this->app->bindShared('veemo.module.migrate.rollback', function($app) {
+            return new Console\ModuleMigrateRollbackCommand($app['veemo.modules'], $app['migrator']);
+        });
+    }
+
+
+    /**
+     * Register the "veemo:module:migrate:refresh" console command.
+     *
+     * @return Console\ModuleMigrateRefreshCommand
+     */
+    protected function registerModuleMigrateRefreshCommand()
+    {
+        $this->app->bindShared('veemo.module.migrate.refresh', function() {
+            return new Console\ModuleMigrateRefreshCommand;
+        });
+    }
+
+
+    /**
+     * Register the "veemo:module:migrate:reset" console command.
+     *
+     * @return Console\ModuleMigrateResetCommand
+     */
+    protected function registerModuleMigrateResetCommand()
+    {
+        $this->app->bindShared('veemo.module.migrate.reset', function($app) {
+            return new Console\ModuleMigrateResetCommand($app['veemo.modules'], $app['files'], $app['migrator']);
+        });
+    }
 
 
 }
