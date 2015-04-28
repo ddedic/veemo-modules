@@ -1,7 +1,6 @@
 <?php
 namespace Veemo\Modules;
 
-use Veemo\Modules\Handlers\ModulesHandler;
 use Illuminate\Database\Migrations\Migrator;
 use Illuminate\Database\Migrations\DatabaseMigrationRepository;
 use Illuminate\Support\ServiceProvider;
@@ -135,6 +134,12 @@ class ModulesServiceProvider extends ServiceProvider
 	 */
 	protected function registerConsoleCommands()
 	{
+        $this->registerModuleListCommand();
+        $this->registerModuleInstallCommand();
+        $this->registerModuleUnInstallCommand();
+        $this->registerModuleEnableCommand();
+        $this->registerModuleDisableCommand();
+
         $this->registerModuleMigrateCommand();
         $this->registerModuleMigrateRollbackCommand();
         $this->registerModuleMigrateRefreshCommand();
@@ -143,6 +148,11 @@ class ModulesServiceProvider extends ServiceProvider
 
 
         $this->commands([
+            'veemo.module.list',
+            'veemo.module.install',
+            'veemo.module.uninstall',
+            'veemo.module.enable',
+            'veemo.module.disable',
             'veemo.module.migrate',
             'veemo.module.migrate.rollback',
             'veemo.module.migrate.refresh',
@@ -216,5 +226,66 @@ class ModulesServiceProvider extends ServiceProvider
         });
     }
 
+
+    /**
+     * Register the "veemo:module:list" console command.
+     *
+     * @return Console\ModuleListCommand
+     */
+    protected function registerModuleListCommand()
+    {
+        $this->app->bindShared('veemo.module.list', function($app) {
+            return new Console\ModuleListCommand($app['veemo.modules']);
+        });
+    }
+
+
+    /**
+     * Register the "veemo:module:install" console command.
+     *
+     * @return Console\ModuleInstallCommand
+     */
+    protected function registerModuleInstallCommand()
+    {
+        $this->app->bindShared('veemo.module.install', function($app) {
+            return new Console\ModuleInstallCommand($app['veemo.modules']);
+        });
+    }
+
+    /**
+     * Register the "veemo:module:uninstall" console command.
+     *
+     * @return Console\ModuleUnInstallCommand
+     */
+    protected function registerModuleUnInstallCommand()
+    {
+        $this->app->bindShared('veemo.module.uninstall', function($app) {
+            return new Console\ModuleUnInstallCommand($app['veemo.modules']);
+        });
+    }
+
+    /**
+     * Register the "veemo:module:enable" console command.
+     *
+     * @return Console\ModuleEnableCommand
+     */
+    protected function registerModuleEnableCommand()
+    {
+        $this->app->bindShared('veemo.module.enable', function($app) {
+            return new Console\ModuleEnableCommand($app['veemo.modules']);
+        });
+    }
+
+    /**
+     * Register the "veemo:module:disable" console command.
+     *
+     * @return Console\ModuleEnableCommand
+     */
+    protected function registerModuleDisableCommand()
+    {
+        $this->app->bindShared('veemo.module.disable', function($app) {
+            return new Console\ModuleDisableCommand($app['veemo.modules']);
+        });
+    }
 
 }

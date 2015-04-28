@@ -95,21 +95,25 @@ class ModuleSeedCommand extends Command {
         if ($module = $this->modules->getManager()->info($slug)) {
 
             $params     = array();
+            $path       = $module['path'];
             $namespace  = $module['namespace'];
 
             $rootSeeder = $moduleName.'DatabaseSeeder';
-            $fullPath   = $namespace.'\Database\Seeds\\'.$rootSeeder;
+            $fullPath   = $path.'/Database/Seeds/'.$rootSeeder . '.php';
+            $fullNamespace = $namespace . '\\Database\\Seeds\\' . $rootSeeder;
 
-            if ($this->files->exists(base_path($fullPath.'.php'))) {
+            if ($this->files->exists($fullPath)) {
                 if ($this->option('class')) {
                     $params['--class'] = $this->option('class');
                 } else {
-                    $params['--class'] = $fullPath;
+                    $params['--class'] = $fullNamespace;
                 }
+
 
                 if ($option = $this->option('database')) {
                     $params['--database'] = $option;
                 }
+
 
                 $this->call('db:seed', $params);
             }

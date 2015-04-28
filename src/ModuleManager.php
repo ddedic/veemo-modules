@@ -358,12 +358,8 @@ class ModuleManager implements Countable, ModuleManagerInterface
 
             $result = $this->modules->where('slug', $slug)->first();
 
-            if ($result) {
+            if ($result && $result->installed) {
                 return $this->modules->updateById($result->id, ['enabled' => 1]);
-
-            } else {
-
-                return $this->modules->create(['slug' => $module['slug'], 'enabled' => 1]);
             }
 
         }
@@ -439,21 +435,24 @@ class ModuleManager implements Countable, ModuleManagerInterface
      * @param $slug
      * @return null
      */
-    public function uninstall($slug)
+    public function uninstall($slug, $force = false)
     {
         if ($check = $this->info($slug)) {
-            if (!$check['is_core']) {
 
-                $module = $this->modules->where('slug', $slug)->first();
-
-                if ($module) {
-                    return $this->modules->updateById($module->id, ['installed' => 0]);
-
-                } else {
-
-                    return $this->modules->create(['slug' => $check['slug'], 'installed' => 0]);
-                }
+            if ($check['is_core'] && $force == false) {
+                return null;
             }
+
+            $module = $this->modules->where('slug', $slug)->first();
+
+            if ($module) {
+                return $this->modules->updateById($module->id, ['installed' => 0, 'enabled' => 0]);
+
+            } else {
+
+                return $this->modules->create(['slug' => $check['slug'], 'installed' => 0, 'enabled' => 0]);
+            }
+
         }
 
 

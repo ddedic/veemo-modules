@@ -95,8 +95,10 @@ class ModuleMigrateCommand extends Command
             // a migration and a seed at the same time, as it is only this command.
             if ($this->option('seed'))
             {
-                $this->call('vemoo:module:seed', ['module' => $slug, '--force']);
+                $this->call('veemo:module:seed', ['module' => $slug, '--force']);
             }
+
+
         } else {
             return $this->error("Module [$moduleName] does not exist.");
         }

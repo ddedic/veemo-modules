@@ -45,6 +45,6 @@ interface ModuleManagerInterface
 
     public function install($slug);
 
-    public function uninstall($slug);
+    public function uninstall($slug, $force = false);
 
 } 

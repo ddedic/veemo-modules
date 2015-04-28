@@ -90,7 +90,7 @@ class ModuleMigrateRefreshCommand extends Command
     protected function runSeeder($module = null, $database = null)
     {
         $this->call('veemo:module:seed', [
-            'module'     => $this->argument('module'),
+            'module'     => $module,
             '--database' => $database
         ]);
     }

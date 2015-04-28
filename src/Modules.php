@@ -2,6 +2,7 @@
 namespace Veemo\Modules;
 
 use App;
+use Artisan;
 use Countable;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\QueryException;
@@ -78,7 +79,8 @@ class Modules implements ModulesInterface
                             $this->manager->enable($slug);
                         }
 
-                        // Migrate and Seed module
+                        // Migrate and Seed
+                        Artisan::call('veemo:module:migrate', ['module' => $slug,'--seed' => 'seed', '--force' => true]);
 
                         $installed = true;
                     }
@@ -88,11 +90,11 @@ class Modules implements ModulesInterface
 
 
             } else {
-                return 'Module is already installed.';
+                return 'Module ' . $module['installed'] . ' is already installed.';
             }
 
         } else {
-            return 'Module you are trying to install doesnt exist';
+            return 'Module you are trying to install doesn\'t exist';
         }
 
     }
@@ -154,9 +156,41 @@ class Modules implements ModulesInterface
     }
 
 
-    public function uninstall($slug)
+    public function uninstall($slug, $force = false)
     {
-        // TODO: Implement uninstall() method.
+        if ($module = $this->manager->info($slug)) {
+
+            if ($module['installed']) {
+
+                if ($module['is_core'] && $force == false)
+                {
+                    return 'Uninstall failed. Probabbly you tried to uninstall core module.';
+                }
+
+                $permissions = $this->uninstallPermissions($module);
+                $settings = $this->uninstallSettings($module);
+                $installed = true;
+
+                if ($permissions && $settings)
+                {
+                    if ($this->manager->uninstall($slug, $force))
+                    {
+                        // Migrate and Seed
+                        Artisan::call('veemo:module:migrate:reset', ['module' => $slug]);
+
+                        $installed = false;
+                    }
+                }
+
+                return ($installed == false) ? 'Module ' . $module['name'] .' uninstalled succesfully.' : 'Module uninstallation failed.';
+
+            } else {
+                return 'Module is already uninstalled.';
+            }
+
+        } else {
+            return 'Module you are trying to install doesnt exist';
+        }
     }
 
     protected function uninstallPermissions($module)
