@@ -3,7 +3,6 @@ namespace Veemo\Modules;
 
 use App;
 use Artisan;
-use Countable;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\QueryException;
 use Veemo\Core\Contracts\Modules\ModulesInterface;
@@ -65,7 +64,7 @@ class Modules implements ModulesInterface
     {
         if ($module = $this->manager->info($slug)) {
 
-            if (!$module['installed']) {
+            if (!$this->manager->isInstalled($slug)) {
 
                 $permissions = $this->installPermissions($module);
                 $settings = $this->installSettings($module);
@@ -101,8 +100,9 @@ class Modules implements ModulesInterface
 
     protected function installPermissions($module)
     {
-        $permissions = app('App\Modules\Core\Users\Repositories\PermissionRepositoryInterface');
-        $roles = app('App\Modules\Core\Users\Repositories\RoleRepositoryInterface');
+        $permissions_bound = App::bound('App\Modules\Core\Users\Repositories\PermissionRepositoryInterface');
+        $roles_bound = App::bound('App\Modules\Core\Users\Repositories\RoleRepositoryInterface');
+
 
         if (is_array($module['config']['permissions']) && (count($module['config']['permissions']) > 0))
         {
@@ -113,28 +113,42 @@ class Modules implements ModulesInterface
 
                     try {
 
-                        foreach ($value as $permission)
-                        {
-                            $new_permission = $permissions->create([
-                                'slug'          => $type . '.' . $permission['slug'],
-                                'name'          => $permission['name'],
-                                'description'   => $permission['description'],
+                        if ($permissions_bound){
 
-                                'module'        => $module['slug'],
-                                'type'          => $type
-                            ]);
+                            $permissions = app('App\Modules\Core\Users\Repositories\PermissionRepositoryInterface');
 
-                            // Assign created permission to default admin user
-                            if ($new_permission)
+                            foreach ($value as $permission)
                             {
-                                $defaultAdminUser = $this->config->get('veemo.auth.users_default_admin_role');
-                                $adminRole = $roles->where('slug', $defaultAdminUser)->first();
+                                $new_permission = $permissions->create([
+                                    'slug'          => $type . '.' . $permission['slug'],
+                                    'name'          => $permission['name'],
+                                    'description'   => $permission['description'],
 
-                                $adminRole->assignPermission($new_permission->id);
+                                    'module'        => $module['slug'],
+                                    'type'          => $type
+                                ]);
+
+                                // Assign created permission to default admin user
+                                if ($new_permission)
+                                {
+                                    if ($roles_bound)
+                                    {
+                                        $roles = app('App\Modules\Core\Users\Repositories\RoleRepositoryInterface');
+
+                                        $defaultAdminUser = $this->config->get('veemo.auth.users_default_admin_role');
+                                        $adminRole = $roles->where('slug', $defaultAdminUser)->first();
+
+                                        $adminRole->assignPermission($new_permission->id);
+
+                                    }
+
+                                }
+
+
                             }
 
-
                         }
+
 
                     } catch (ModelNotFoundException $e) {
                         // skip
@@ -160,7 +174,7 @@ class Modules implements ModulesInterface
     {
         if ($module = $this->manager->info($slug)) {
 
-            if ($module['installed']) {
+            if ($this->manager->isInstalled($slug)) {
 
                 if ($module['is_core'] && $force == false)
                 {
@@ -195,9 +209,12 @@ class Modules implements ModulesInterface
 
     protected function uninstallPermissions($module)
     {
-        $permissions = app('App\Modules\Core\Users\Repositories\PermissionRepositoryInterface');
+        $permissions_bound = App::bound('App\Modules\Core\Users\Repositories\PermissionRepositoryInterface');
 
-        $permissions->where('module', $module['slug'])->delete();
+        if ($permissions_bound) {
+            $permissions = app('App\Modules\Core\Users\Repositories\PermissionRepositoryInterface');
+            $permissions->where('module', $module['slug'])->delete();
+        }
 
         return true;
     }
@@ -211,7 +228,7 @@ class Modules implements ModulesInterface
     {
         if ($module = $this->manager->info($slug)) {
 
-            if (!$module['enabled'])
+            if (!$this->manager->isEnabled($slug))
             {
                 $enabled = false;
 
@@ -235,7 +252,7 @@ class Modules implements ModulesInterface
     {
         if ($module = $this->manager->info($slug)) {
 
-            if ($module['enabled'])
+            if ($this->manager->isEnabled($slug))
             {
                 $enabled = true;
 
@@ -251,13 +268,27 @@ class Modules implements ModulesInterface
             }
 
         } else {
-            return 'Module you are trying to disable doesnt exist';
+            return 'Module you are trying to disable doesn\'t exist';
         }
     }
 
-    public function register($module)
+    public function register($slug)
     {
-        // TODO: Implement register() method.
+        if ($module = $this->manager->info($slug)){
+
+            // Register Service Provider
+            $this->registerServiceProvider($module);
+
+            // Build Backend Menu
+            //
+
+            // Build Frontend Menu
+            //
+
+            return true;
+        }
+
+        return null;
     }
 
 
@@ -268,13 +299,8 @@ class Modules implements ModulesInterface
         foreach ($modules as $module)
         {
             // Register Module Service Provider
-            $this->registerServiceProvider($module);
+            $this->register($module['slug']);
 
-            // Build Backend Menu
-            //
-
-            // Build Frontend Menu
-            //
         }
 
     }

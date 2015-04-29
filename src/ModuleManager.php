@@ -161,8 +161,8 @@ class ModuleManager implements Countable, ModuleManagerInterface
                     $current_module['path'] = $module;
                     $current_module['namespace'] = $this->config->get('veemo.modules.namespace.' . $which) . Str::studly($current_module['slug']);
 
-                    $current_module['installed'] = $this->isInstalled($current_module['slug']);
-                    $current_module['enabled'] = $this->isEnabled($current_module['slug']);
+                    $current_module['installed'] = null; // $this->isInstalled($current_module['slug']); // reduce db queries
+                    $current_module['enabled'] = null; // $this->isEnabled($current_module['slug']); // reduce db queries
 
                     $modules[$current_module['slug']] = $current_module;
                 }
@@ -304,9 +304,23 @@ class ModuleManager implements Countable, ModuleManagerInterface
         if (is_array($this->conditions)) {
             foreach ($this->conditions as $condition => $value) {
                 $result = $modules->filter(function ($module) use ($condition, $value) {
-                    if ($module[$condition] == $value) {
-                        return true;
+
+                    //if ($module[$condition] == $value) {
+                    //    return true;
+                    //}
+
+                    if($condition == 'enabled') {
+                        return $this->isEnabled($module['slug']);
                     }
+
+                    if($condition == 'disabled') {
+                        return $this->isEnabled($module['slug']);
+                    }
+
+                    if($condition == 'installed') {
+                        return $this->isInstalled($module['slug']);
+                    }
+
                 });
 
                 $modules = $result;

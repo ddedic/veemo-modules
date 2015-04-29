@@ -40,4 +40,13 @@ class Module extends BaseEloquentModel implements ModuleInterface
     ];
 
 
+    /**
+     * The number of minutes to cache query results.
+     *
+     * @var null
+     */
+    protected $cacheMinutes = 1440;
+
+
+
 }

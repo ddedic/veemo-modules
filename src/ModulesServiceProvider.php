@@ -23,6 +23,8 @@ class ModulesServiceProvider extends ServiceProvider
 			__DIR__.'/Config/modules.php' => config_path('veemo/modules.php'),
 		]);
 
+        $this->app['veemo.modules']->registerModules();
+
 	}
 
 	/**
@@ -66,7 +68,7 @@ class ModulesServiceProvider extends ServiceProvider
         // Bind ModuleRepository
         $this->app->bind('Veemo\Modules\Repositories\ModuleRepositoryInterface', function()
         {
-            return  new Repositories\ModuleEloquentRepository(
+            return new Repositories\ModuleEloquentRepository(
                 new Models\Module()
             );
         });
@@ -87,11 +89,12 @@ class ModulesServiceProvider extends ServiceProvider
 
 
 
-
         // Register Modules
-		$this->app->booting(function ($app) {
-			//$app['modules']->register();
-		});
+		//$this->app->booting(function ($app) {
+		//	$app['veemo.modules']->registerModules();
+		//});
+
+
 	}
 
 	/**

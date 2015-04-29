@@ -31,7 +31,7 @@ class ModuleListCommand extends Command
     /**
      * @var array $header The table headers for the command.
      */
-    protected $headers = ['Name', 'Slug', 'Description', 'Core Module', 'Installed', 'Status'];
+    protected $headers = ['Name', 'Slug', 'Description', 'Version', 'Is Core', 'Installed', 'Status'];
 
 
     /**
@@ -82,9 +82,10 @@ class ModuleListCommand extends Command
                 'name'        => $module['name'],
                 'slug'        => $module['slug'],
                 'description' => $module['description'],
+                'version'     => $module['version'],
                 'is_core'     => ($module['is_core']) ? 'Yes' : 'No',
-                'installed'   => ($module['installed']) ? 'Yes' : 'No',
-                'status'      => ($module['enabled']) ? 'Enabled' : 'Disabled'
+                'installed'   => ($this->modules->getManager()->isInstalled($module['slug'])) ? 'Yes' : 'No',
+                'status'      => ($this->modules->getManager()->isEnabled($module['slug'])) ? 'Enabled' : 'Disabled'
             ];
         }
 
