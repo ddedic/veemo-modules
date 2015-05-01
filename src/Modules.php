@@ -248,7 +248,7 @@ class Modules implements ModulesInterface
         }
     }
 
-    public function disable($slug)
+    public function disable($slug, $force = false)
     {
         if ($module = $this->manager->info($slug)) {
 
@@ -256,7 +256,7 @@ class Modules implements ModulesInterface
             {
                 $enabled = true;
 
-                if ($this->manager->disable($slug))
+                if ($this->manager->disable($slug, $force))
                 {
                     $enabled = false;
                 }
@@ -279,12 +279,6 @@ class Modules implements ModulesInterface
             // Register Service Provider
             $this->registerServiceProvider($module);
 
-            // Build Backend Menu
-            //
-
-            // Build Frontend Menu
-            //
-
             return true;
         }
 
@@ -300,9 +294,9 @@ class Modules implements ModulesInterface
         {
             // Register Module Service Provider
             $this->register($module['slug']);
-
         }
 
+        return;
     }
 
 

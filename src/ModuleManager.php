@@ -398,12 +398,13 @@ class ModuleManager implements Countable, ModuleManagerInterface
 
     /**
      * @param $slug
+     * @param bool $force
      * @return null
      */
-    public function disable($slug)
+    public function disable($slug, $force = false)
     {
         if ($check = $this->info($slug)) {
-            if (!$check['is_core']) {
+            if (!$check['is_core'] || ($check['is_core'] && $force)) {
 
                 $module = $this->modules->where('slug', $slug)->first();
 

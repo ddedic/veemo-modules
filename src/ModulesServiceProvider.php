@@ -23,8 +23,6 @@ class ModulesServiceProvider extends ServiceProvider
 			__DIR__.'/Config/modules.php' => config_path('veemo/modules.php'),
 		]);
 
-        $this->app['veemo.modules']->registerModules();
-
 	}
 
 	/**

@@ -70,7 +70,8 @@ class ModuleDisableCommand extends Command
      */
     protected function disable($slug)
     {
-        $output = $this->modules->disable($slug);
+        $force = $this->option('force');
+        $output = $this->modules->disable($slug, $force);
 
         $this->line($output);
     }
@@ -95,6 +96,7 @@ class ModuleDisableCommand extends Command
     protected function getOptions()
     {
         return [
+            ['force', null, InputOption::VALUE_OPTIONAL, 'Force disable module.'],
         ];
     }
 }
